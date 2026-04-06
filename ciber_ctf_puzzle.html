@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>// ACCESO RESTRINGIDO</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --green:#00ff41;
+  --green-dim:#00802a;
+  --green-dark:#003010;
+  --amber:#ffb000;
+  --red:#ff2222;
+  --bg:#010801;
+  --bg2:#050f05;
+  --scanline:rgba(0,255,65,0.03);
+}
+
+html,body{
+  height:100%;
+  background:var(--bg);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;
+  overflow:hidden;
+  cursor:crosshair;
+}
+
+/* ── SCANLINES overlay ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);
+  pointer-events:none;z-index:9998;
+}
+
+/* ── CRT flicker ── */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,0.7) 100%);
+  pointer-events:none;z-index:9997;
+  animation:flicker 8s infinite;
+}
+@keyframes flicker{
+  0%,98%,100%{opacity:1}
+  99%{opacity:0.85}
+}
+
+/* ── SCREENS ── */
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:20px;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.1s;
+  overflow-y:auto;
+}
+.screen.active{opacity:1;pointer-events:all;}
+
+/* ── INTRO ── */
+#screen-intro{
+  background:var(--bg);
+  text-align:center;
+}
+.intro-glitch{
+  font-family:'VT323',monospace;
+  font-size:clamp(2rem,6vw,4.5rem);
+  color:var(--green);
+  letter-spacing:6px;
+  text-shadow:0 0 20px var(--green),0 0 40px rgba(0,255,65,0.3);
+  animation:glitch 3s infinite;
+  position:relative;
+}
+.intro-glitch::before,.intro-glitch::after{
+  content:attr(data-text);
+  position:absolute;left:0;top:0;width:100%;
+}
+.intro-glitch::before{
+  color:#ff2222;clip:rect(0,900px,0,0);
+  animation:glitch-r 2s infinite;
+}
+.intro-glitch::after{
+  color:#00ffff;clip:rect(0,900px,0,0);
+  animation:glitch-b 2s infinite 0.1s;
+}
+@keyframes glitch{
+  0%,94%,100%{transform:translate(0)}
+  95%{transform:translate(-2px,1px)}
+  97%{transform:translate(2px,-1px)}
+}
+@keyframes glitch-r{
+  0%,90%{clip:rect(0,0,0,0);transform:translate(0)}
+  91%{clip:rect(20px,900px,40px,0);transform:translate(3px)}
+  93%{clip:rect(60px,900px,80px,0);transform:translate(-3px)}
+  95%{clip:rect(0,0,0,0)}
+}
+@keyframes glitch-b{
+  0%,88%{clip:rect(0,0,0,0);transform:translate(0)}
+  89%{clip:rect(40px,900px,60px,0);transform:translate(-2px)}
+  92%{clip:rect(10px,900px,30px,0);transform:translate(2px)}
+  94%{clip:rect(0,0,0,0)}
+}
+
+.intro-sub{
+  font-size:0.85rem;
+  color:var(--green-dim);
+  letter-spacing:4px;
+  margin:1rem 0 3rem;
+  text-transform:uppercase;
+}
+.intro-story{
+  max-width:680px;
+  text-align:left;
+  font-size:0.95rem;
+  line-height:2;
+  color:#aaffaa;
+  border-left:2px solid var(--green-dim);
+  padding-left:1.5rem;
+  margin-bottom:2.5rem;
+}
+.intro-story p{margin-bottom:1rem;}
+.intro-story .em{color:var(--green);text-shadow:0 0 8px rgba(0,255,65,0.5);}
+
+.wall-msg{
+  font-family:'VT323',monospace;
+  font-size:1.4rem;
+  color:rgba(0,255,65,0.45);
+  border:1px solid rgba(0,255,65,0.15);
+  padding:0.8rem 2rem;
+  margin-bottom:2.5rem;
+  letter-spacing:2px;
+  text-align:center;
+}
+
+.btn-start{
+  background:transparent;
+  border:1px solid var(--green);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;
+  font-size:1rem;
+  letter-spacing:3px;
+  padding:14px 48px;
+  cursor:pointer;
+  text-transform:uppercase;
+  position:relative;
+  overflow:hidden;
+  transition:box-shadow 0.3s;
+}
+.btn-start::before{
+  content:'';
+  position:absolute;inset:0;
+  background:var(--green);
+  transform:translateX(-100%);
+  transition:transform 0.3s;
+  z-index:-1;
+}
+.btn-start:hover{
+  color:#000;
+  box-shadow:0 0 30px rgba(0,255,65,0.5);
+}
+.btn-start:hover::before{transform:translateX(0);}
+
+/* ── STAGE 1 — TRES TERMINALES ── */
+#screen-s1{background:var(--bg);flex-direction:column;}
+
+.stage-header{
+  text-align:center;
+  margin-bottom:1.5rem;
+  flex-shrink:0;
+}
+.stage-label{
+  font-size:0.7rem;
+  color:var(--green-dim);
+  letter-spacing:4px;
+  margin-bottom:0.4rem;
+}
+.stage-title{
+  font-family:'VT323',monospace;
+  font-size:2rem;
+  color:var(--green);
+  text-shadow:0 0 15px rgba(0,255,65,0.4);
+}
+
+.terminals-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  width:100%;
+  max-width:1200px;
+  margin:0 auto;
+  flex-shrink:0;
+}
+
+.terminal{
+  border:1px solid var(--green-dim);
+  border-radius:4px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  height:320px;
+  background:#000;
+  position:relative;
+  transition:border-color 0.3s,box-shadow 0.3s;
+}
+.terminal:hover{
+  border-color:var(--green);
+  box-shadow:0 0 20px rgba(0,255,65,0.15);
+}
+
+.term-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  background:#050f05;
+  border-bottom:1px solid var(--green-dark);
+  flex-shrink:0;
+}
+.term-dot{width:8px;height:8px;border-radius:50%;background:var(--green-dim);animation:dot-pulse 2s infinite;}
+.term-dot:nth-child(2){animation-delay:0.3s;}
+.term-dot:nth-child(3){animation-delay:0.6s;}
+@keyframes dot-pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+.term-title{font-size:0.7rem;color:var(--green-dim);letter-spacing:2px;margin-left:4px;}
+
+.term-body{
+  flex:1;
+  overflow:hidden;
+  padding:10px;
+  font-size:0.72rem;
+  line-height:1.6;
+  position:relative;
+}
+
+/* Terminal 1 — noisy */
+.t1-stream{
+  position:absolute;top:0;left:0;right:0;
+  padding:10px;
+  animation:scroll-up 6s linear infinite;
+}
+@keyframes scroll-up{
+  from{transform:translateY(0)}
+  to{transform:translateY(-50%)}
+}
+.t1-line{
+  display:flex;gap:8px;margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;
+}
+.t1-line .ts{color:var(--green-dim);}
+.t1-line .ok{color:var(--green);}
+.t1-line .err{color:var(--red);animation:err-blink 0.8s infinite;}
+.t1-line .warn{color:var(--amber);}
+.t1-line .num{color:#00aaff;}
+@keyframes err-blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Terminal 2 — calm */
+.t2-lines{padding:8px;}
+.t2-line{
+  color:#aaffaa;
+  margin-bottom:6px;
+  opacity:0;
+  animation:fade-in-line 0.5s forwards;
+}
+@keyframes fade-in-line{to{opacity:1}}
+.t2-cur{
+  display:inline-block;
+  width:8px;height:14px;
+  background:var(--green);
+  animation:blink 1s infinite;
+  vertical-align:text-bottom;
+  margin-left:4px;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* Terminal 3 — anomaly */
+.t3-line{
+  color:#aaffaa;
+  margin-bottom:6px;
+  font-size:0.72rem;
+}
+.t3-anomaly{
+  position:relative;
+  display:inline-block;
+}
+.t3-anomaly .word-normal{
+  position:relative;
+  color:#aaffaa;
+  /* slight shift — the key detail */
+  letter-spacing:0.15em;
+  top:2px;
+  font-style:italic;
+}
+.t3-hint{
+  position:absolute;
+  bottom:8px;left:10px;right:10px;
+  font-size:0.62rem;
+  color:rgba(0,255,65,0.25);
+  letter-spacing:1px;
+  border-top:1px solid rgba(0,255,65,0.1);
+  padding-top:6px;
+}
+
+/* ── CHOICE BUTTONS ── */
+.choice-row{
+  display:flex;
+  gap:12px;
+  margin-top:16px;
+  justify-content:center;
+  flex-shrink:0;
+}
+.choice-btn{
+  background:transparent;
+  border:1px solid var(--green-dim);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.8rem;
+  letter-spacing:2px;
+  padding:10px 24px;
+  cursor:pointer;
+  text-transform:uppercase;
+  transition:all 0.2s;
+}
+.choice-btn:hover{
+  border-color:var(--green);
+  background:rgba(0,255,65,0.08);
+  box-shadow:0 0 15px rgba(0,255,65,0.2);
+}
+.choice-btn.wrong{
+  border-color:var(--red)!important;
+  color:var(--red)!important;
+  animation:shake 0.4s ease;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+
+/* ── TRANSITION OVERLAY ── */
+#transition{
+  position:fixed;inset:0;
+  background:#000;
+  z-index:9995;
+  opacity:0;
+  pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:20px;
+}
+#transition.show{opacity:1;pointer-events:all;}
+.trans-text{
+  font-family:'VT323',monospace;
+  font-size:1.6rem;
+  color:var(--green-dim);
+  letter-spacing:3px;
+  opacity:0;
+  animation:none;
+}
+.trans-text.show{animation:fadein-out 3s ease forwards;}
+@keyframes fadein-out{
+  0%{opacity:0;transform:translateY(10px)}
+  30%{opacity:1;transform:translateY(0)}
+  70%{opacity:1}
+  100%{opacity:0}
+}
+
+/* door crack effect */
+.door-crack{
+  position:relative;
+  width:120px;height:200px;
+  border:1px solid rgba(0,255,65,0.1);
+  opacity:0;
+}
+.door-crack.open{animation:door-open 2s ease forwards;}
+.door-crack::after{
+  content:'';
+  position:absolute;
+  top:0;left:50%;bottom:0;
+  width:2px;
+  background:var(--green);
+  box-shadow:0 0 15px var(--green),0 0 30px rgba(0,255,65,0.5);
+  transform:scaleY(0);
+}
+.door-crack.open::after{animation:crack-grow 1.5s 0.5s ease forwards;}
+@keyframes door-open{to{opacity:1}}
+@keyframes crack-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+
+/* ── STAGE 2 ── */
+#screen-s2{background:var(--bg);}
+
+.single-terminal{
+  width:100%;max-width:700px;
+  border:1px solid var(--green-dim);
+  border-radius:4px;
+  overflow:hidden;
+  background:#000;
+  margin:0 auto;
+}
+.single-terminal .term-bar{background:#050f05;}
+
+.s2-body{
+  padding:1.5rem;
+  font-size:0.88rem;
+  line-height:1.9;
+}
+.s2-msg{
+  color:var(--amber);
+  border-left:3px solid var(--amber);
+  padding-left:1rem;
+  margin-bottom:1.5rem;
+  font-family:'VT323',monospace;
+  font-size:1.2rem;
+  letter-spacing:1px;
+}
+.s2-log{
+  color:#aaffaa;
+  margin-bottom:1.5rem;
+  padding:0.8rem;
+  background:#050f05;
+  border:1px solid rgba(0,255,65,0.1);
+}
+.s2-log div{padding:2px 0;}
+
+.s2-options{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:1.5rem;
+}
+.s2-opt{
+  background:transparent;
+  border:1px solid rgba(0,255,65,0.2);
+  color:#aaffaa;
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.82rem;
+  padding:12px 16px;
+  cursor:pointer;
+  text-align:left;
+  letter-spacing:1px;
+  transition:all 0.2s;
+  display:flex;gap:12px;align-items:center;
+}
+.s2-opt:hover{
+  border-color:var(--green);
+  background:rgba(0,255,65,0.06);
+  color:var(--green);
+}
+.s2-opt .opt-n{color:var(--green-dim);flex-shrink:0;}
+.s2-footer{
+  font-size:0.75rem;
+  color:rgba(0,255,65,0.35);
+  border-top:1px solid rgba(0,255,65,0.1);
+  padding-top:1rem;
+  letter-spacing:1px;
+  font-style:italic;
+}
+
+/* ── STAGE 3 ── */
+#screen-s3{
+  background:var(--bg);
+  flex-direction:column;
+}
+
+.corridor{
+  width:100%;max-width:600px;
+  margin:0 auto;
+  text-align:center;
+}
+.corridor-story{
+  font-size:0.88rem;
+  color:#7aaa7a;
+  line-height:2;
+  margin-bottom:2rem;
+  text-align:left;
+  padding:0 1rem;
+}
+.corridor-story p{margin-bottom:0.8rem;}
+.corridor-story .em{color:var(--green);}
+
+.panel{
+  border:1px solid rgba(0,255,65,0.2);
+  border-radius:4px;
+  background:#020a02;
+  padding:2rem;
+  margin-bottom:1.5rem;
+}
+.panel-msg{
+  font-family:'VT323',monospace;
+  font-size:1.3rem;
+  color:rgba(0,255,65,0.5);
+  line-height:1.8;
+  margin-bottom:1.5rem;
+  letter-spacing:1px;
+}
+
+.flag-input-wrap{
+  position:relative;
+  margin-bottom:1rem;
+}
+.flag-input{
+  width:100%;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--green-dim);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;
+  font-size:1.05rem;
+  padding:10px 4px;
+  outline:none;
+  letter-spacing:2px;
+  transition:border-color 0.3s;
+  caret-color:var(--green);
+}
+.flag-input:focus{border-bottom-color:var(--green);}
+.flag-input::placeholder{color:rgba(0,255,65,0.2);letter-spacing:1px;}
+.flag-input.wrong{
+  border-bottom-color:var(--red)!important;
+  color:var(--red)!important;
+  animation:shake 0.4s ease;
+}
+
+.submit-btn{
+  background:transparent;
+  border:1px solid var(--green-dim);
+  color:var(--green);
+  font-family:'Share Tech Mono',monospace;
+  font-size:0.8rem;
+  letter-spacing:3px;
+  padding:10px 36px;
+  cursor:pointer;
+  text-transform:uppercase;
+  transition:all 0.2s;
+  margin-top:1rem;
+}
+.submit-btn:hover{
+  border-color:var(--green);
+  background:rgba(0,255,65,0.08);
+  box-shadow:0 0 20px rgba(0,255,65,0.2);
+}
+
+/* ── WIN SCREEN ── */
+#screen-win{
+  background:#000;
+  text-align:center;
+  flex-direction:column;
+  gap:0;
+}
+.win-glow{
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse at center,rgba(0,255,65,0.08) 0%,transparent 70%);
+  pointer-events:none;
+  animation:win-pulse 3s ease-in-out infinite;
+}
+@keyframes win-pulse{
+  0%,100%{opacity:0.5}
+  50%{opacity:1}
+}
+.win-flag-label{
+  font-size:0.7rem;
+  color:var(--green-dim);
+  letter-spacing:6px;
+  margin-bottom:0.8rem;
+  animation:fadeup 1s 0.5s both;
+}
+.win-title{
+  font-family:'VT323',monospace;
+  font-size:clamp(2.5rem,7vw,5rem);
+  color:var(--green);
+  text-shadow:0 0 40px rgba(0,255,65,0.6),0 0 80px rgba(0,255,65,0.2);
+  letter-spacing:4px;
+  animation:fadeup 1s 0.3s both;
+  line-height:1.1;
+  margin-bottom:0.5rem;
+}
+.win-flag{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(1rem,2.5vw,1.4rem);
+  color:#000;
+  background:var(--green);
+  padding:10px 28px;
+  letter-spacing:2px;
+  margin:1.5rem auto;
+  display:inline-block;
+  animation:fadeup 1s 1.5s both;
+  box-shadow:0 0 30px rgba(0,255,65,0.5);
+}
+.win-msg{
+  max-width:600px;
+  margin:0 auto;
+  font-size:0.9rem;
+  color:#7aaa7a;
+  line-height:2;
+  animation:fadeup 1s 0.9s both;
+  text-align:left;
+  padding:0 1rem;
+}
+.win-msg p{margin-bottom:0.6rem;}
+.win-msg .em{color:var(--green);}
+.win-granted{
+  font-family:'VT323',monospace;
+  font-size:1.8rem;
+  color:var(--green);
+  letter-spacing:4px;
+  margin-top:1.5rem;
+  animation:fadeup 1s 2s both;
+  text-shadow:0 0 15px rgba(0,255,65,0.5);
+}
+@keyframes fadeup{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ── ERROR MSG ── */
+.err-msg{
+  font-size:0.75rem;
+  color:var(--red);
+  text-align:center;
+  margin-top:8px;
+  min-height:18px;
+  letter-spacing:1px;
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.err-msg.show{opacity:1;}
+
+/* ── TYPING INDICATOR ── */
+.typing-line{
+  font-size:0.78rem;
+  color:var(--green-dim);
+  margin-top:6px;
+}
+.typing-cursor{
+  display:inline-block;width:7px;height:13px;
+  background:var(--green-dim);
+  animation:blink 0.8s infinite;
+  vertical-align:text-bottom;
+}
+
+/* ── PROGRESS ── */
+.progress-bar{
+  position:fixed;top:0;left:0;right:0;
+  height:2px;
+  background:rgba(0,255,65,0.1);
+  z-index:100;
+}
+.progress-fill{
+  height:100%;
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+  transition:width 1s ease;
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+<!-- ══ TRANSITION OVERLAY ══ -->
+<div id="transition">
+  <div class="trans-text" id="trans-text"></div>
+  <div class="door-crack" id="door-crack"></div>
+</div>
+
+<!-- ══════════ INTRO ══════════ -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-glitch" data-text="// SISTEMA ACTIVO //">// SISTEMA ACTIVO //</div>
+  <div class="intro-sub">Protocolo de acceso iniciado — nivel desconocido</div>
+
+  <div class="intro-story">
+    <p>La ciudad <span class="em">desaparece</span> y ahora estás dentro de un edificio desconocido.</p>
+    <p>No hay mapas, no hay instrucciones claras. Solo un objetivo implícito: <span class="em">salir.</span></p>
+    <p>El lugar parece abandonado… pero todo está demasiado ordenado para ser casualidad.</p>
+    <p>Avanzas por un pasillo y llegas a una sala con <span class="em">tres terminales encendidas</span>. Cada una muestra información distinta.</p>
+  </div>
+
+  <div class="wall-msg">"Aquí no gana el más rápido.<br>Gana quien entiende qué ignorar."</div>
+
+  <button class="btn-start" onclick="startGame()">[ INGRESAR ]</button>
+</div>
+
+
+<!-- ══════════ STAGE 1 — TRES TERMINALES ══════════ -->
+<div class="screen" id="screen-s1">
+  <div class="stage-header">
+    <div class="stage-label">// FASE 01 DE 03 //</div>
+    <div class="stage-title">SALA DE TERMINALES</div>
+  </div>
+
+  <div class="terminals-grid">
+
+    <!-- TERMINAL 1 — ruidosa -->
+    <div class="terminal" id="t1">
+      <div class="term-bar">
+        <div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div>
+        <span class="term-title">TERMINAL — 01 · MONITOREO ACTIVO</span>
+      </div>
+      <div class="term-body" style="overflow:hidden;position:relative;">
+        <div class="t1-stream" id="t1-stream"></div>
+      </div>
+    </div>
+
+    <!-- TERMINAL 2 — tranquila -->
+    <div class="terminal" id="t2">
+      <div class="term-bar">
+        <div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div>
+        <span class="term-title">TERMINAL — 02 · REGISTRO</span>
+      </div>
+      <div class="term-body">
+        <div class="t2-lines">
+          <div class="t2-line" style="animation-delay:0.2s">03:12 — Actividad normal</div>
+          <div class="t2-line" style="animation-delay:0.8s">03:13 — Actividad normal</div>
+          <div class="t2-line" style="animation-delay:1.4s">03:14 — Actividad normal</div>
+          <div class="t2-line" style="animation-delay:2.0s">03:15 — Actividad normal</div>
+          <div class="t2-line" style="animation-delay:2.6s; color:var(--green-dim); font-size:0.65rem;">
+            — fin de registro parcial —
+          </div>
+          <div class="t2-line" style="animation-delay:3s;">
+            <span class="t2-cur"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMINAL 3 — anomalía sutil -->
+    <div class="terminal" id="t3">
+      <div class="term-bar">
+        <div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div>
+        <span class="term-title">TERMINAL — 03 · ENTRADA ÚNICA</span>
+      </div>
+      <div class="term-body" style="display:flex;flex-direction:column;justify-content:center;">
+        <div style="padding:8px;">
+          <div class="t3-line" style="color:var(--green-dim);font-size:0.65rem;margin-bottom:16px;">
+            — registro de sistema —
+          </div>
+          <div class="t3-line">
+            03:14 — Actividad <span class="t3-anomaly"><span class="word-normal">normal</span></span>
+          </div>
+          <div style="margin-top:24px;font-size:0.62rem;color:rgba(0,255,65,0.2);letter-spacing:0.5px;font-style:italic;">
+            checksum: 0x4f3a ··· integrity: ??
+          </div>
+        </div>
+        <div class="t3-hint">observa los detalles · no solo el contenido</div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <div style="text-align:center;margin-top:14px;font-size:0.7rem;color:var(--green-dim);letter-spacing:2px;">
+    Detrás de ti, un sonido leve. Como si el tiempo importara.
+  </div>
+
+  <div class="choice-row">
+    <button class="choice-btn" id="btn-t1" onclick="chooseTerminal(1)">[ TERMINAL 1 ]</button>
+    <button class="choice-btn" id="btn-t2" onclick="chooseTerminal(2)">[ TERMINAL 2 ]</button>
+    <button class="choice-btn" id="btn-t3" onclick="chooseTerminal(3)">[ TERMINAL 3 ]</button>
+  </div>
+  <div class="err-msg" id="err-s1"></div>
+</div>
+
+
+<!-- ══════════ STAGE 2 ══════════ -->
+<div class="screen" id="screen-s2">
+  <div class="stage-header">
+    <div class="stage-label">// FASE 02 DE 03 //</div>
+    <div class="stage-title">SALA DE INCIDENTES</div>
+  </div>
+
+  <div class="single-terminal">
+    <div class="term-bar">
+      <div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div>
+      <span class="term-title">TERMINAL ÚNICA · ANÁLISIS DE EVENTO</span>
+    </div>
+    <div class="s2-body">
+      <div class="s2-msg">⚠ Se detectó una anomalía.<br>Se registraron tres acciones posibles.</div>
+
+      <div class="s2-log">
+        <div style="color:var(--green-dim);font-size:0.65rem;margin-bottom:8px;">— log de sistema —</div>
+        <div>03:14 — Evento detectado</div>
+        <div>03:14 — <span style="color:var(--amber);">Usuario A</span> accede</div>
+        <div>03:14 — <span style="color:var(--amber);">Usuario A</span> cierra sesión</div>
+      </div>
+
+      <div class="s2-options">
+        <button class="s2-opt" onclick="chooseS2(1)">
+          <span class="opt-n">1.</span>
+          Marcar como falso positivo
+        </button>
+        <button class="s2-opt" onclick="chooseS2(2)">
+          <span class="opt-n">2.</span>
+          Escalar incidente
+        </button>
+        <button class="s2-opt" onclick="chooseS2(3)">
+          <span class="opt-n">3.</span>
+          Ignorar y continuar
+        </button>
+      </div>
+
+      <div class="s2-footer">"No todo lo que es breve es inofensivo."</div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-s2"></div>
+</div>
+
+
+<!-- ══════════ STAGE 3 ══════════ -->
+<div class="screen" id="screen-s3">
+  <div class="stage-header">
+    <div class="stage-label">// FASE 03 DE 03 //</div>
+    <div class="stage-title">EL PASILLO FINAL</div>
+  </div>
+
+  <div class="corridor">
+    <div class="corridor-story">
+      <p>Al confirmar la decisión, no hay cambio brusco esta vez. Simplemente… <span class="em">avanzas.</span></p>
+      <p>El entorno ya no intenta confundirte. No hay ruido, no hay anomalías visibles. Solo un pasillo largo, limpio, casi demasiado simple.</p>
+      <p>Cada paso resuena más de lo normal.</p>
+      <p>Al final del pasillo encuentras una puerta entreabierta.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-msg">
+        "No todo se resuelve en el momento.<br>
+        Algunas respuestas se entregan antes…<br>
+        y se olvidan después."
+      </div>
+
+      <div style="font-size:0.75rem;color:#5a8a5a;margin-bottom:1.2rem;line-height:1.8;">
+        Recuerdas que, antes de llegar aquí, hubo un punto que parecía irrelevante.<br>
+        No era complejo. No requería análisis.<br>
+        <span style="color:var(--green-dim);">Solo atención.</span>
+      </div>
+
+      <div class="flag-input-wrap">
+        <input
+          type="text"
+          class="flag-input"
+          id="flag-input"
+          placeholder="ingresa lo que guardaste..."
+          autocomplete="off"
+          spellcheck="false"
+          onkeydown="if(event.key==='Enter')submitFlag()"
+        />
+      </div>
+      <div style="text-align:center;">
+        <button class="submit-btn" onclick="submitFlag()">[ CONFIRMAR ACCESO ]</button>
+      </div>
+    </div>
+
+    <div class="err-msg" id="err-s3"></div>
+    <div class="typing-line" id="typing-s3" style="text-align:center;opacity:0;">
+      <span class="typing-cursor"></span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ WIN ══════════ -->
+<div class="screen" id="screen-win">
+  <div class="win-glow"></div>
+  <div style="position:relative;z-index:2;width:100%;max-width:680px;padding:20px;">
+    <div class="win-flag-label">// ACCESO CONCEDIDO //</div>
+    <div class="win-title">SISTEMA<br>LIBERADO</div>
+
+    <div class="win-msg">
+      <p>Superaste cada etapa.</p>
+      <p>No fue cuestión de avanzar rápido, sino de avanzar con <span class="em">criterio</span>: filtraste el ruido, detectaste lo que no encajaba, evitaste suposiciones y prestaste atención cuando parecía innecesario.</p>
+      <p>Llegaste hasta el final porque no trataste cada paso como aislado, sino como parte de un mismo proceso.</p>
+    </div>
+
+    <div class="win-granted">ACCESO CONCEDIDO.</div>
+
+    <div class="win-flag" id="win-flag-text">C1b3r{h4rdw4r3_l0g1c}</div>
+
+    <div style="font-size:0.65rem;color:var(--green-dim);letter-spacing:2px;margin-top:0.5rem;animation:fadeup 1s 2.5s both;opacity:0;">
+      flag capturada · reto completado
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let gameStarted = false;
+
+/* ═══════════════════════════════════════════════
+   TERMINAL 1 — generador de ruido
+═══════════════════════════════════════════════ */
+const T1_MSGS = [
+  {cls:'ok',  t:'ACCESO DETECTADO',    pfx:''},
+  {cls:'err', t:'INTENTO FALLIDO',     pfx:''},
+  {cls:'ok',  t:'SISTEMA ESTABLE',     pfx:''},
+  {cls:'warn',t:'ERROR LEVE',          pfx:''},
+  {cls:'num', t:'0x4F2A → 0x7E91',    pfx:''},
+  {cls:'ok',  t:'CONEXIÓN VALIDADA',   pfx:''},
+  {cls:'err', t:'PAQUETE DESCARTADO',  pfx:''},
+  {cls:'warn',t:'LATENCIA: 842ms',     pfx:''},
+  {cls:'ok',  t:'HEARTBEAT OK',        pfx:''},
+  {cls:'num', t:'REQ #38471',          pfx:''},
+  {cls:'err', t:'TIMEOUT —SOCKET 3',   pfx:''},
+  {cls:'ok',  t:'MÓDULO RECARGADO',    pfx:''},
+  {cls:'warn',t:'BUFFER 91%',          pfx:''},
+  {cls:'num', t:'192.168.10.44:51293', pfx:''},
+  {cls:'ok',  t:'AUTH TOKEN OK',       pfx:''},
+  {cls:'err', t:'SEGFAULT — PID 9821', pfx:''},
+  {cls:'ok',  t:'SYNC COMPLETADO',     pfx:''},
+  {cls:'warn',t:'REINICIO MÓDULO B',   pfx:''},
+  {cls:'num', t:'ff:d4:2a:e3:91:00',  pfx:''},
+  {cls:'ok',  t:'ACTIVIDAD NORMAL',    pfx:''},
+];
+
+function buildT1(){
+  const stream = document.getElementById('t1-stream');
+  // double set for seamless loop
+  for(let pass=0;pass<2;pass++){
+    for(let i=0;i<28;i++){
+      const m = T1_MSGS[Math.floor(Math.random()*T1_MSGS.length)];
+      const ts = `0${2+Math.floor(Math.random()*2)}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}`;
+      const div = document.createElement('div');
+      div.className='t1-line';
+      div.innerHTML=`<span class="ts">${ts}</span><span class="${m.cls}">${m.t}</span>`;
+      stream.appendChild(div);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+  });
+  const s = document.getElementById(id);
+  if(s) s.classList.add('active');
+}
+
+function setProgress(p){
+  document.getElementById('progress').style.width = p+'%';
+}
+
+/* ═══════════════════════════════════════════════
+   TRANSITIONS
+═══════════════════════════════════════════════ */
+function runTransition(msg, showDoor, cb){
+  const overlay = document.getElementById('transition');
+  const txt     = document.getElementById('trans-text');
+  const door    = document.getElementById('door-crack');
+
+  overlay.style.transition='opacity 0.6s';
+  overlay.classList.add('show');
+
+  setTimeout(()=>{
+    txt.textContent = msg;
+    txt.classList.add('show');
+    if(showDoor){
+      door.style.display='block';
+      door.classList.add('open');
+    }
+  },300);
+
+  setTimeout(()=>{
+    txt.classList.remove('show');
+    door.classList.remove('open');
+    door.style.display='none';
+    cb();
+    setTimeout(()=>{
+      overlay.classList.remove('show');
+    },400);
+  }, showDoor ? 3200 : 2200);
+}
+
+/* ═══════════════════════════════════════════════
+   GAME START
+═══════════════════════════════════════════════ */
+function startGame(){
+  if(gameStarted) return;
+  gameStarted=true;
+  buildT1();
+  setProgress(10);
+  runTransition('Accediendo al sistema…', false, ()=>{
+    showScreen('screen-s1');
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════ */
+function resetGame(){
+  // reset error states
+  ['btn-t1','btn-t2','btn-t3'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b) b.classList.remove('wrong');
+  });
+  const fi = document.getElementById('flag-input');
+  if(fi){fi.value='';fi.classList.remove('wrong');}
+  document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('.s2-opt').forEach(b=>b.classList.remove('wrong'));
+
+  setProgress(0);
+
+  runTransition('Reiniciando protocolo…', false, ()=>{
+    showScreen('screen-intro');
+    setProgress(0);
+    gameStarted=false;
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   STAGE 1
+═══════════════════════════════════════════════ */
+function chooseTerminal(n){
+  if(n===3){
+    setProgress(40);
+    // screens turn off effect then door
+    runTransition('Decisión registrada.\nPuerta desbloqueada.', true, ()=>{
+      showScreen('screen-s2');
+      setProgress(45);
+    });
+  } else {
+    const btnId = 'btn-t'+n;
+    const btn = document.getElementById(btnId);
+    btn.classList.add('wrong');
+    const err = document.getElementById('err-s1');
+    err.textContent = '[ ERROR ] Selección incorrecta. Reiniciando secuencia...';
+    err.classList.add('show');
+    setTimeout(()=>{
+      btn.classList.remove('wrong');
+      resetGame();
+    }, 2000);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   STAGE 2
+═══════════════════════════════════════════════ */
+function chooseS2(n){
+  if(n===2){
+    setProgress(75);
+    // heavy darkness transition — screens off
+    const overlay = document.getElementById('transition');
+    const txt     = document.getElementById('trans-text');
+    const door    = document.getElementById('door-crack');
+
+    overlay.style.transition='opacity 1.2s'; // slower fade for dramatic darkness
+    overlay.classList.add('show');
+
+    setTimeout(()=>{
+      txt.textContent='Las pantallas se apagan.';
+      txt.classList.add('show');
+    },400);
+
+    setTimeout(()=>{
+      txt.classList.remove('show');
+    },2000);
+
+    setTimeout(()=>{
+      txt.textContent='Una puerta se abre lentamente.';
+      txt.classList.add('show');
+      door.style.display='block';
+      door.classList.add('open');
+    },2400);
+
+    setTimeout(()=>{
+      txt.classList.remove('show');
+      door.classList.remove('open');
+      door.style.display='none';
+      showScreen('screen-s3');
+      setTimeout(()=>{
+        overlay.classList.remove('show');
+        overlay.style.transition='opacity 0.6s';
+        setProgress(80);
+      },600);
+    },5000);
+
+  } else {
+    const btns = document.querySelectorAll('.s2-opt');
+    btns[n-1].style.borderColor='var(--red)';
+    btns[n-1].style.color='var(--red)';
+    const err = document.getElementById('err-s2');
+    err.textContent='[ ERROR ] Decisión comprometida. Reiniciando...';
+    err.classList.add('show');
+    setTimeout(()=>{
+      btns[n-1].style.borderColor='';
+      btns[n-1].style.color='';
+      resetGame();
+    },2000);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   STAGE 3
+═══════════════════════════════════════════════ */
+const SECRET = 'C1b3r{n3tw0rk1ng_fund4m3nt4ls}';
+
+function submitFlag(){
+  const input = document.getElementById('flag-input');
+  const val = input.value.trim();
+
+  if(val === SECRET){
+    setProgress(100);
+    // clean minimal advance — no flash
+    input.style.borderBottomColor='var(--green)';
+    input.style.color='var(--green)';
+    setTimeout(()=>{
+      runTransition('Acceso confirmado.', false, ()=>{
+        showScreen('screen-win');
+      });
+    },600);
+  } else {
+    input.classList.add('wrong');
+    const err = document.getElementById('err-s3');
+    err.textContent='[ ERROR ] Entrada incorrecta. Reiniciando protocolo...';
+    err.classList.add('show');
+    setTimeout(()=>{
+      input.classList.remove('wrong');
+      input.value='';
+      resetGame();
+    },2200);
+  }
+}
+</script>
+</body>
+</html>
